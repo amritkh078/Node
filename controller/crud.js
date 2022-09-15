@@ -4,9 +4,29 @@ const db = require('../model/db');
 exports.get = (req, res)=>{
     let sql = 'SELECT * FROM product'
     db.query(sql, (err, result) => {
-        if (!err) {
-            res.send(result);}
-        })
+        if(err) throw err;
+        
+        const page = parseInt(req.query.page); // parsing value as string and return integer
+        const limit= parseInt(req.query.limit);
+        const startindex= (page -1) * limit; 
+        const endindex = page * limit;
+        const results = {};
+
+        if(endindex < result.length){
+            results.next = {
+                page : page + 1,
+                limit : limit
+            }
+        }
+        if(startindex > 0){  // there is no previous page for 1st page 
+            results.previous = {
+                page : page - 1,
+                limit : limit
+            }
+        }
+        results.results = result.slice(startindex, endindex)
+        res.json(results);
+    })    
 }
 exports.post = (req, res)=>{
     let record = req.body;
